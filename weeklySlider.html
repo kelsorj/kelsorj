@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+  .week-control {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #333;
+    color: white;
+    padding: 10px;
+  }
+
+  .day {
+    flex-grow: 1;
+    text-align: center;
+    opacity: 0.5; /* Non-active days */
+  }
+
+  .day.active {
+    opacity: 1; /* Active day */
+  }
+
+  .arrow-button {
+    background-color: #444;
+    border: none;
+    color: white;
+    padding: 10px;
+    cursor: pointer;
+  }
+
+  .time-slider {
+    -webkit-appearance: none;
+    width: 100%;
+    background: #444;
+    outline: none;
+    opacity: 0.7;
+    height: 15px; /* Set the height of the slider track */
+    margin-bottom: 20px; /* Adjust if needed */
+    position: relative; /* Add this to position the thumb correctly */
+  }
+
+  .time-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 25px; /* Width of the thumb */
+    height: 25px; /* Height of the thumb */
+    background: #4CAF50;
+    cursor: pointer;
+    position: absolute; /* Absolute position within the track */
+    top: 50%; /* Center vertically */
+    transform: translateY(-50%); /* Offset by half the height to truly center */
+  }
+
+  .time-slider::-moz-range-thumb {
+    width: 25px; /* Width of the thumb */
+    height: 25px; /* Height of the thumb */
+    background: #4CAF50;
+    cursor: pointer;
+    position: absolute; /* Absolute position within the track */
+    top: 50%; /* Center vertically */
+    transform: translateY(-50%); /* Offset by half the height to truly center */
+  }
+
+  .slider-container {
+    position: relative;
+    margin: 10px 0 20px; /* Reduced overall margin for the container */
+  }
+
+  .slider-marks {
+    display: flex;
+    justify-content: space-between;
+    position: relative; /* Change to relative so it moves with the flow of the document */
+    width: 100%;
+    margin-top: -5px; /* Reduce space above the labels if needed */
+  }
+
+  .slider-label {
+    text-align: center;
+    color: #aaa;
+    font-size: 0.8em; /* Adjust font size as needed */
+    margin-top: 2px; /* Reduced space at the top of the labels */
+  }
+
+  /* Ensure the labels are below the slider thumb */
+  .slider-container:after {
+    content: '';
+    display: block;
+    height: 25px; /* At least the height of the thumb */
+  }
+</style>
+</head>
+<body>
+
+<div class="week-control">
+  <button class="arrow-button" onclick="changeDay(-1)">&#9664;</button>
+  <div class="day" id="day0">SUN <span class="date" id="date0"></span></div>
+  <div class="day" id="day1">MON <span class="date" id="date1"></span></div>
+  <div class="day" id="day2">TUE <span class="date" id="date2"></span></div>
+  <div class="day" id="day3">WED <span class="date" id="date3"></span></div>
+  <div class="day" id="day4">THU <span class="date" id="date4"></span></div>
+  <div class="day" id="day5">FRI <span class="date" id="date5"></span></div>
+  <div class="day" id="day6">SAT <span class="date" id="date6"></span></div>
+  <button class="arrow-button" onclick="changeDay(1)">&#9654;</button>
+</div>
+
+<div class="slider-container">
+  <input type="range" min="0" max="1439" class="time-slider" id="timeSlider">
+  <div class="slider-marks">
+    <span class="slider-label">12 AM</span>
+    <span class="slider-label">3 AM</span>
+    <span class="slider-label">6 AM</span>
+    <span class="slider-label">9 AM</span>
+    <span class="slider-label">NOON</span>
+    <span class="slider-label">3 PM</span>
+    <span class="slider-label">6 PM</span>
+    <span class="slider-label">9 PM</span>
+    <span class="slider-label">12 PM</span> <!-- This label represents midnight. -->
+  </div>
+</div>
+
+<script>
+let currentDate = new Date();
+
+function updateDates() {
+  for (let i = 0; i < 7; i++) {
+    let date = new Date(currentDate);
+    date.setDate(currentDate.getDate() - currentDate.getDay() + i);
+    let dayElement = document.getElementById('date' + i);
+    dayElement.textContent = 
+      (date.getMonth() + 1).toString().padStart(2, '0') + '/' +
+      date.getDate().toString().padStart(2, '0');
+  }
+}
+
+function setCurrentDayAndTime() {
+  const currentTime = currentDate.getHours() * 60 + currentDate.getMinutes();
+  const currentDay = currentDate.getDay();
+  document.querySelectorAll('.day').forEach((day, index) => {
+    day.classList.toggle('active', index === currentDay);
+  });
+  document.getElementById('timeSlider').value = currentTime;
+  updateDates();
+}
+
+function changeDay(direction) {
+  currentDate.setDate(currentDate.getDate() + direction);
+  setCurrentDayAndTime(); // Reuse this function to update everything
+}
+
+// Initialize the controls with the current day and time
+setCurrentDayAndTime();
+</script>
+
+</body>
+</html>
