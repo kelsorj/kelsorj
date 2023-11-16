@@ -7,6 +7,11 @@ import subprocess
 import time
 from pyaxidraw import axidraw   # Import the module
 
+import numpy as np
+from datetime import datetime
+import matplotlib.pyplot as plt
+from sqlalchemy import create_engine, text
+
 ad = axidraw.AxiDraw()          # Create class instance
 
 # Create an MQTT client
@@ -19,15 +24,30 @@ def read_csv_file(filename):
     try:
         with open(filename, "r") as file:
             lines = file.readlines()
-            last_elem = lines[-1].split(",")
-            num = int(last_elem[1])
-            print(num)
-            return num
+            print(f"Total lines in {filename}: {len(lines)}")  # Print the total number of lines
+            line_counter = 0
+            # Reverse iterate through the lines to find the last valid number
+            for line in reversed(lines):
+                line_counter += 1
+                elements = line.split(",")
+                print(f"Processing line {len(lines) - line_counter + 1}: {line.strip()}")  # Print the current line being processed
+                if len(elements) > 1:
+                    print(f"Elements in line {len(lines) - line_counter + 1}: {elements}")  # Print the elements of the current line
+                    if elements[1].strip().isdigit():
+                        num = int(elements[1])
+                        print(f"Found valid number {num} in line {len(lines) - line_counter + 1}")
+                        return num
+                else:
+                    print(f"Line {len(lines) - line_counter + 1} is not properly formatted or empty.")
+            # If no valid number is found in the file
+            print(f"No valid number found in {filename}")
+            return 0
     except (ValueError, FileNotFoundError) as e:
         print(f"Error opening {filename}: {e}")
         global all_csvs_read_successfully
         all_csvs_read_successfully = False
         return 0
+
 
 
 def calculate_total(numArray):
@@ -76,6 +96,73 @@ B4NUM = read_csv_file("/Volumes/LABDATA/Labeye_Video/Bender4_OLS.csv")
 if all_csvs_read_successfully:
     # Proceed with the rest of the code only if all CSVs are read successfully
     total = calculate_total([B1NUM, B2NUM, B3NUM, B4NUM])
+
+    # Define the date range for the "end of imaging" timestamp
+    start_date = datetime(2021, 1, 1, 0, 0, 0)
+    end_date = datetime.now()
+    target_query = ""
+
+    # Create an engine object to connect to the PostgreSQL database
+    engine = create_engine("postgresql://spt:@spadsrv.eikontx.com:5432/spad_prod")
+    query = """
+    SELECT request->>'barcode' AS barcode,
+           request->>'elnid' AS elnid,
+           event->>'timestamp' AS imaging_end_timestamp,
+           request->>'system_name' AS system_name,
+           request->>'target' AS target,
+           request->'scope_metadata'->>'name' AS scope_name
+    FROM processes,
+    LATERAL jsonb_array_elements(request->'events') AS event
+    WHERE event->>'label' = 'end of imaging'
+      AND (event->>'timestamp')::timestamp BETWEEN :start_date AND :end_date;
+    """
+
+    # Create a dictionary to hold your parameters
+    params = {
+        "start_date": start_date,
+        "end_date": end_date,
+    }
+
+    with engine.connect() as connection:
+        # Pass the dictionary of parameters to the execute() method
+        results = connection.execute(text(query), params)
+        # Extract timestamps and barcode counts
+        timestamps = []
+        well_counts = []
+
+        for record in results:
+            # Convert the row proxy to a dictionary
+            record_dict = record._asdict()
+            try:
+                # Parse the 'imaging_end_timestamp' to a datetime object
+                # Make sure the format matches the timestamp format from your database
+                timestamp_str = record_dict['imaging_end_timestamp']
+                timestamp = datetime.strptime(timestamp_str, '%a, %d %b %Y %H:%M:%S %Z')  # using the old format that worked
+
+                if 2021 <= timestamp.year <= 2100:
+                    timestamps.append(timestamp)
+                    # If the well count is always 308, you can continue using this value
+                    # Otherwise, you should pull this value from the record as well
+                    well_counts.append(308)
+
+            except ValueError as e:
+                print(f"Error parsing date: {e}")
+            except KeyError as e:
+                print(f"Missing expected column: {e}")
+            except Exception as e:
+                print(f"Unexpected error: {e}")
+        #for record in results:
+        #    #barcode = record['barcode']
+        #    timestamp = datetime.strptime(record['imaging_end_timestamp'], '%a, %d %b %Y %H:%M:%S %Z')
+        #    if 2021 <= timestamp.year <= 2100:
+        #        timestamps.append(timestamp)
+        #        well_counts.append(308)
+
+    sorted_indices = np.argsort(timestamps)
+    timestamps_sorted = np.array(timestamps)[sorted_indices]
+    cumulative_wells = np.cumsum(np.array(well_counts)[sorted_indices])
+    print("SPAD Total = " + str(cumulative_wells[-1]))
+    total = cumulative_wells[-1]
     # The word to render
     formatted_number = format_number_with_periods(total)
     word = str(formatted_number)
@@ -252,6 +339,3 @@ if all_csvs_read_successfully:
     ad.plot_run() 
 else:
     print("Not all CSV files could be read. Skipping plotting.")
-
-                
-
