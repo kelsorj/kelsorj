@@ -4,7 +4,7 @@
 - 🌱 I’m done building a flatbed scanner to read dotmatrix tubes
 - 🌱 I’m done building a plate rotator to spin SBS microplates 0-360 degrees
 - 🌱 I’m done building a tube rotator to spin tube to solubilize chemicals
-- 🌱 I’m currently building an illumination engine to do dark field imaging
+- 🌱 I’m done building an illumination engine to do dark field imaging
 - 💞️ I’m looking to collaborate on advanced robotics for drug screening
 
 <!---
