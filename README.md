@@ -5,6 +5,8 @@
 - 🌱 I’m done building a plate rotator to spin SBS microplates 0-360 degrees
 - 🌱 I’m done building a tube rotator to spin tube to solubilize chemicals
 - 🌱 I’m done building an illumination engine to do dark field imaging
+- 🌱 I’m done building an automated vial handling system that decaps vials, reads barcodes, weight vials, and recaps vials
+- 🌱 I’m done training a robot to automatically pick up objects
 - 💞️ I’m looking to collaborate on advanced robotics for drug screening
 
 <!---
