@@ -7,6 +7,8 @@
 - 🌱 I’m done building an illumination engine to do dark field imaging
 - 🌱 I’m done building an automated vial handling system that decaps vials, reads barcodes, weight vials, and recaps vials
 - 🌱 I’m done training a robot to automatically pick up objects
+- 🌱 I’m done building v1 of pyBravo
+- 🌱 I’m working on a AI enabled lab automation framework including labware, hardware, and software
 - 💞️ I’m looking to collaborate on advanced robotics for drug screening
 
 <!---
